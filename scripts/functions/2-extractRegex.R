@@ -1,43 +1,47 @@
 ################### Extract participant names out of dataList ##################
-extract_participant_names <- function(dataList){
-  names <- sapply(dataList, function(df) {
-    name <- regex_s(df,"\\bname\\b")
+extract_participant_names <- function(data_list) {
+  names <- sapply(data_list, function(df) {
+    name <- regex_s(df, "\\bname\\b")
   })
   return(names)
 }
 ################### Extract demographics and test parameters ###################
-extract_metadata <- function(dataList){
-  metadata <- lapply(dataList, function(df) {
-    name <- regex_s(df,"\\bname\\b")
-    age <- regex_s(df,"\\bage\\b")
-    sex <- regex_s(df,"\\bsex\\b")
-    bodyMass <- regex_s(df,"\\bweight\\b",unit="kg")
-    device <- regex_s(df,"^(?=.*(exercise))(?=.*(device)).*$")
-    barometricPressure <- regex_s(df,"^(?=.*(baro))(?=.*(press)).*$")
-    temperature <- regex_s(df,"^(?=.*(insp))(?=.*(temp)).*$")
-    relativeHumidity <- regex_s(df,"^(?=.*(insp))(?=.*(humid)).*$")
-    startWarmUp <- regex_s(df,"^(?=.*(warm))(?=.*(up)).*$",1)
-    ifelse(length(startWarmUp)==0,startWarmUp <- NA,startWarmUp)
-    startExercise <- regex_s(df,"^(?=.*(start))(?=.*(exercise)).*$",1)
-    ifelse(length(startExercise)==0,startExercise <- NA,startExercise)
-    endExercise <- regex_s(df,"^(?=.*(cool))(?=.*(down)).*$",1)
-    ifelse(length(endExercise)==0,endExercise <- NA,endExercise)
-    
-    df <- data.frame(name, age, sex, bodyMass, device, barometricPressure,
-                     temperature, relativeHumidity, startWarmUp, startExercise,
-                      endExercise)
-    df <- df %>% tidytable::select(tidytable::where(~any(!is.na(.))))
+extract_metadata <- function(data_list) {
+  metadata <- lapply(data_list, function(df) {
+    name <- regex_s(df, "\\bname\\b")
+    age <- regex_s(df, "\\bage\\b")
+    sex <- regex_s(df, "\\bsex\\b")
+    body_mass <- regex_s(df, "\\bweight\\b", unit = "kg")
+    device <- regex_s(df, "^(?=.*(exercise))(?=.*(device)).*$")
+    barometric_pressure <- regex_s(df, "^(?=.*(baro))(?=.*(press)).*$")
+    temperature <- regex_s(df, "^(?=.*(insp))(?=.*(temp)).*$")
+    relative_humidity <- regex_s(df, "^(?=.*(insp))(?=.*(humid)).*$")
+    start_warmup <- regex_s(df, "^(?=.*(warm))(?=.*(up)).*$", 1)
+    ifelse(length(start_warmup) == 0, start_warmup <- NA, start_warmup)
+    start_exercise <- regex_s(df, "^(?=.*(start))(?=.*(exercise)).*$", 1)
+    ifelse(length(start_exercise) == 0, start_exercise <- NA, start_exercise)
+    end_exercise <- regex_s(df, "^(?=.*(cool))(?=.*(down)).*$", 1)
+    ifelse(length(end_exercise) == 0, end_exercise <- NA, end_exercise)
+
+    df <- data.frame(
+      name, age, sex, body_mass, device, barometric_pressure,
+      temperature, relative_humidity, start_warmup, start_exercise,
+      end_exercise
+    )
+    df <- df %>% tidytable::select(tidytable::where(~ any(!is.na(.))))
   })
-return(metadata)
+  return(metadata)
 }
 
 ################ Extract testdate append to demographicsList ###################
-extract_test_date <- function(extractFrom,appendTo){
-  testDates <- mapply(df = appendTo, vec = extractFrom, SIMPLIFY = F,
-                      FUN = function(df,vec){
-    testDate <- regmatches(vec, regexpr("\\d{8}", vec))
-    df$testDate <- as.Date(testDate, format = "%Y%m%d")
-    df
-  })
-return(testDates)
+extract_test_date <- function(extract_from, append_to) {
+  test_dates <- mapply(
+    df = append_to, vec = extract_from, SIMPLIFY = FALSE,
+    FUN = function(df, vec) {
+      test_date <- regmatches(vec, regexpr("\\d{8}", vec))
+      df$test_date <- as.Date(test_date, format = "%Y%m%d")
+      df
+    }
+  )
+  return(test_dates)
 }

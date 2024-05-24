@@ -1,135 +1,187 @@
-create_gxt_plots <- function(dataList,metadataList,vtDataList,
-                             participantNameList,saveTo){
-  
-  purrr::pwalk(list(df = dataList, meta = metadataList, vt = vtDataList,
-                    name = participantNameList, path = saveTo),
-  function(df,meta,vt,name,path){
-    
-    plot <-  ggplot(df,aes(x=time))+
-      geom_line(aes(y=(work/100),group=3, colour='Work'))+
-      geom_area(aes(y = (work/100)), fill ="lightblue", group=3, alpha = 0.4 ) +
-      guides(color = guide_legend(override.aes = list(size = 1.5)))+
-      labs(color="Measurement")+
-      geom_line(aes(y=vco2Filt,group=2, colour='VCO2'))+
-      geom_line(aes(y=vo2absFilt,group=1, colour='VO2'))+
-      
-      geom_vline(xintercept = vt$vt1_time)+
-      annotate(x=vt$vt1_time,y=0.5,
-               label="GET",vjust=2,geom="label")+
-      
-      geom_vline(xintercept = vt$vt2_time,)+
-      annotate(x=vt$vt2_time,y=0.5,
-               label="RCP",vjust=2,geom="label")+
-      
-      geom_vline(xintercept = df$time[meta$startExerciseIndex],linetype = "dashed")+
-      annotate(x=df$time[meta$startExerciseIndex],y=0.5,
-               label="Start",vjust=2,geom="label")+
-      
-      geom_vline(xintercept = df$time[meta$endExerciseIndex],linetype = "dashed")+
-      annotate(x=df$time[meta$endExerciseIndex],y=0.5,
-               label="Cooldown",vjust=2,geom="label")+
-      
-      scale_y_continuous(name="VO2 | VCO2 (l/min)",
-                         breaks = seq(0,10, by = 0.5),
-                         sec.axis = sec_axis(~.*100,name= 'Work (W)',
-                                             breaks = seq(0, 1000, by = 50) ))+
-      scale_x_time(name = "Time (mm:ss)", breaks = seq(0,
-                                               max(df$time), by = 60),
-                   labels = scales::label_time(format = '%M:%S'))+
-      theme_bw()+
-      scale_color_manual(name='Measurement',
-                        breaks=c('VO2', 'VCO2','Work'),
-                        values=c('VO2'='green', 'VCO2'='red', 'Work'='lightblue'))
-    plot
-    save_plot_named_as_to(plot = plot,name = name,path = path)
-  })
+create_gxt_plots <- function(data_list, metadata_list, vt_data_list,
+                             participant_name_list, save_to) {
+  purrr::pwalk(
+    list(
+      df = data_list, meta = metadata_list, vt = vt_data_list,
+      name = participant_name_list, path = save_to
+    ),
+    function(df, meta, vt, name, path) {
+      plot <- ggplot(df, aes(x = time)) +
+        geom_line(aes(y = (work / 100), group = 3, colour = "Work")) +
+        geom_area(aes(y = (work / 100)),
+                  fill = "lightblue", group = 3, alpha = 0.4) +
+        guides(color = guide_legend(override.aes = list(size = 1.5))) +
+        labs(color = "Measurement") +
+        geom_line(aes(y = vco2_filt, group = 2, colour = "VCO2")) +
+        geom_line(aes(y = vo2_abs_filt, group = 1, colour = "VO2")) +
+        geom_vline(xintercept = vt$vt1_time) +
+        annotate(
+          x = vt$vt1_time, y = 0.5,
+          label = "GET", vjust = 2, geom = "label"
+        ) +
+        geom_vline(xintercept = vt$vt2_time, ) +
+        annotate(
+          x = vt$vt2_time, y = 0.5,
+          label = "RCP", vjust = 2, geom = "label"
+        ) +
+        geom_vline(xintercept = df$time[meta$start_exercise_index],
+                   linetype = "dashed") +
+        annotate(
+          x = df$time[meta$startExerciseIndex], y = 0.5,
+          label = "Start", vjust = 2, geom = "label"
+        ) +
+        geom_vline(xintercept = df$time[meta$end_exercise_index],
+                   linetype = "dashed") +
+        annotate(
+          x = df$time[meta$end_exercise_index], y = 0.5,
+          label = "Cooldown", vjust = 2, geom = "label"
+        ) +
+        scale_y_continuous(
+          name = "VO2 | VCO2 (l/min)",
+          breaks = seq(0, 10, by = 0.5),
+          sec.axis = sec_axis(~ . * 100,
+            name = "Work (W)",
+            breaks = seq(0, 1000, by = 50)
+          )
+        ) +
+        scale_x_time(
+          name = "Time (mm:ss)", breaks = seq(0,
+            max(df$time),
+            by = 60
+          ),
+          labels = scales::label_time(format = "%M:%S")
+        ) +
+        theme_bw() +
+        scale_color_manual(
+          name = "Measurement",
+          breaks = c("VO2", "VCO2", "Work"),
+          values = c("VO2" = "green", "VCO2" = "red", "Work" = "lightblue")
+        )
+      plot
+      save_plot_named_as_to(plot = plot, name = name, path = path)
+    }
+  )
 }
 
-create_threshold_plots <- function(dataList,vtDataList,participantNameList,
-                                   saveTo){
-  purrr::pwalk(list(df = dataList, vt = vtDataList,
-                    name = participantNameList, path = saveTo),
-               function(df,vt,name,path) {
-    plotExco2 <- ggplot(df, aes(x=time))+
-      geom_point(aes(y=exco2),colour='blue')+
-      geom_vline(xintercept = df$time[vt$vt1_indexExCo], colour='green')+
-      annotate(x=df$time[vt$vt1_indexExCo],y=+Inf,
-               label=paste0("VT1=",df$time[vt$vt1_indexExCo]," s"),
-               vjust=2,geom="label")+
-      theme_bw()
-    
-    plotVslope <- ggplot(df, aes(x=vo2abs))+
-      geom_point(aes(y=vco2),colour='blue')+
-      geom_vline(xintercept = df$vo2abs[vt$vt1_indexVslope], colour='green')+
-      annotate(x=df$vo2abs[vt$vt1_indexVslope],y=+Inf,
-               label=paste0("VT1=",df$time[vt$vt1_indexVslope]," s"),
-               vjust=2,geom="label")+
-      theme_bw()
-    
-    plotExVe <- ggplot(df, aes(x=time))+
-      geom_point(aes(y=exve),colour='blue')+
-      geom_vline(xintercept = df$time[vt$vt2_indexExVent], colour='green')+
-      annotate(x=df$time[vt$vt2_indexExVent],y=+Inf,
-               label=paste0("VT2=",df$time[vt$vt2_indexExVent]," s"),
-               vjust=2,geom="label")+
-      theme_bw()
-    
-    plotVslope2 <- ggplot(df, aes(x=vco2))+
-      geom_point(aes(y=ve),colour='blue')+
-      geom_vline(xintercept = df$vco2[vt$vt2_indexVslope], colour='green')+
-      annotate(x=df$vco2[vt$vt2_indexVslope],y=+Inf,
-               label=paste0("VT2=",df$time[vt$vt2_indexVslope]," s"),
-               vjust=2,geom="label")+
-      theme_bw()
-    
-    plotVentiEquiv <- ggplot(df, aes(x=time))+
-      coord_cartesian(xlim = c(300, 1100),ylim = c(7.5,45))+
-      scale_x_continuous(name="Time (s)",
-                         breaks=seq(300,1150,50) )+
-      scale_y_continuous(name="VE/VO2 | VE/VCO2", breaks=seq(10,45,5),
-                         sec.axis = sec_axis(~.*10,name='Work' ) )+
-      geom_point(aes(y=vevo2, colour='VE/VO2') )+
-      geom_point(aes(y=vevco2, colour='VE/VCO2') )+
-      geom_vline(xintercept = df$time[vt$vt1_index],colour='black',
-                 linetype = "dotted")+
-      annotate(x=df$time[vt$vt1_index],y=+Inf,
-               label=paste0("VT1=",df$time[vt$vt1_index]," s"),
-               vjust=2,geom="label")+
-      geom_vline(xintercept = df$time[vt$vt2_index],colour='green',
-                 linetype = "longdash")+
-      annotate(x=df$time[vt$vt2_index],y=+Inf,
-               label=paste0("VT2=",df$time[vt$vt2_index]," s"),
-               vjust=2,geom="label")+
-      geom_area(aes(y = (work/10),colour="Work"), fill ="lightblue", 
-                alpha = 0.4) +
-      scale_color_manual(name=' ',breaks=c('VE/VO2', 'VE/VCO2', 'Work'),
-                         values=c('VE/VO2'='blue', 'VE/VCO2'='red',
-                                  'Work'='lightblue'),
-                         guides(colour = guide_legend(
-                                override.aes = list(size = 8) ) ) )+
-      theme_bw()+
-      guides(shape = guide_legend(override.aes = list(size = 1)))+
-      guides(color = guide_legend(override.aes = list(size = 1)))+
-      theme(legend.title = element_blank(),
-            legend.text = element_text(size = 8),
-            legend.position = c(.05, .95),
-            legend.justification = c("left", "top"),
-            legend.box.just = "right",
-            legend.margin = margin(6, 6, 6, 6) )
-    
-    plots <- list(plotExco2,plotVslope,plotExVe,plotVslope2,plotVentiEquiv)
-    layout <- rbind(c(1,1,2,2),
-                    c(1,1,2,2),
-                    c(3,3,4,4),
-                    c(3,3,4,4),
-                    c(5,5,5,5),
-                    c(5,5,5,5),
-                    c(5,5,5,5),
-                    c(5,5,5,5),
-                    c(5,5,5,5))
-    
-    plot <- arrangeGrob(grobs = plots, layout_matrix = layout)
-    
-    save_plot_named_as_to(plot = plot,name = name,path = path)
-  })
+create_threshold_plots <- function(data_list, vt_data_list,
+                                   participant_name_list, save_to) {
+  purrr::pwalk(
+    list(
+      df = data_list, vt = vt_data_list,
+      name = participant_name_list, path = save_to
+    ),
+    function(df, vt, name, path) {
+      plot_exco2 <- ggplot(df, aes(x = time)) +
+        geom_point(aes(y = exco2), colour = "blue") +
+        geom_vline(xintercept = df$time[vt$vt1_index_exco], colour = "green") +
+        annotate(
+          x = df$time[vt$vt1_index_exco], y = +Inf,
+          label = paste0("VT1=", df$time[vt$vt1_index_exco], " s"),
+          vjust = 2, geom = "label"
+        ) +
+        theme_bw()
+      plot_vslope <- ggplot(df, aes(x = vo2_abs)) +
+        geom_point(aes(y = vco2), colour = "blue") +
+        geom_vline(xintercept = df$vo2_abs[vt$vt1_index_vslope],
+                   colour = "green") +
+        annotate(x = df$vo2_abs[vt$vt1_index_vslope], y = +Inf,
+          label = paste0("VT1=", df$time[vt$vt1_index_vslope], " s"),
+          vjust = 2, geom = "label"
+        ) +
+        theme_bw()
+
+      plot_exve <- ggplot(df, aes(x = time)) +
+        geom_point(aes(y = exve), colour = "blue") +
+        geom_vline(xintercept = df$time[vt$vt2_index_exvent],
+                   colour = "green") +
+        annotate(x = df$time[vt$vt2_index_exvent], y = +Inf,
+          label = paste0("VT2=", df$time[vt$vt2_index_exvent], " s"),
+          vjust = 2, geom = "label"
+        ) +
+        theme_bw()
+
+      plot_vslope2 <- ggplot(df, aes(x = vco2)) +
+        geom_point(aes(y = ve), colour = "blue") +
+        geom_vline(xintercept = df$vco2[vt$vt2_index_vslope],
+                   colour = "green") +
+        annotate(x = df$vco2[vt$vt2_index_vslope], y = +Inf,
+          label = paste0("VT2=", df$time[vt$vt2_index_vslope], " s"),
+          vjust = 2, geom = "label"
+        ) +
+        theme_bw()
+
+      plot_venti_equiv <- ggplot(df, aes(x = time)) +
+        coord_cartesian(xlim = c(300, 1100), ylim = c(7.5, 45)) +
+        scale_x_continuous(
+          name = "Time (s)",
+          breaks = seq(300, 1150, 50)
+        ) +
+        scale_y_continuous(
+          name = "VE/VO2 | VE/VCO2", breaks = seq(10, 45, 5),
+          sec.axis = sec_axis(~ . * 10, name = "Work")
+        ) +
+        geom_point(aes(y = vevo2, colour = "VE/VO2")) +
+        geom_point(aes(y = vevco2, colour = "VE/VCO2")) +
+        geom_vline(
+          xintercept = df$time[vt$vt1_index], colour = "black",
+          linetype = "dotted"
+        ) +
+        annotate(
+          x = df$time[vt$vt1_index], y = +Inf,
+          label = paste0("VT1=", df$time[vt$vt1_index], " s"),
+          vjust = 2, geom = "label"
+        ) +
+        geom_vline(
+          xintercept = df$time[vt$vt2_index], colour = "green",
+          linetype = "longdash"
+        ) +
+        annotate(
+          x = df$time[vt$vt2_index], y = +Inf,
+          label = paste0("VT2=", df$time[vt$vt2_index], " s"),
+          vjust = 2, geom = "label"
+        ) +
+        geom_area(aes(y = (work / 10), colour = "Work"),
+          fill = "lightblue",
+          alpha = 0.4
+        ) +
+        scale_color_manual(
+          name = " ", breaks = c("VE/VO2", "VE/VCO2", "Work"),
+          values = c(
+            "VE/VO2" = "blue", "VE/VCO2" = "red",
+            "Work" = "lightblue"
+          ),
+          guides(colour = guide_legend(
+            override.aes = list(size = 8)
+          ))
+        ) +
+        theme_bw() +
+        guides(shape = guide_legend(override.aes = list(size = 1))) +
+        guides(color = guide_legend(override.aes = list(size = 1))) +
+        theme(
+          legend.title = element_blank(),
+          legend.text = element_text(size = 8),
+          legend.position.inside = c(.05, .95),
+          legend.justification = c("left", "top"),
+          legend.box.just = "right",
+          legend.margin = margin(6, 6, 6, 6)
+        )
+      plots <- list(plot_exco2, plot_vslope, plot_exve, plot_vslope2,
+                    plot_venti_equiv)
+      layout <- rbind(
+        c(1, 1, 2, 2),
+        c(1, 1, 2, 2),
+        c(3, 3, 4, 4),
+        c(3, 3, 4, 4),
+        c(5, 5, 5, 5),
+        c(5, 5, 5, 5),
+        c(5, 5, 5, 5),
+        c(5, 5, 5, 5),
+        c(5, 5, 5, 5)
+      )
+
+      plot <- arrangeGrob(grobs = plots, layout_matrix = layout)
+
+      save_plot_named_as_to(plot = plot, name = name, path = path)
+    }
+  )
 }
